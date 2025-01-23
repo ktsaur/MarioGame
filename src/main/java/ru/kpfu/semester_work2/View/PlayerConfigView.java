@@ -52,8 +52,7 @@ public class PlayerConfigView extends BaseView{
                 Label waitingLabel = new Label("Waiting for another player...");
                 box.getChildren().add(waitingLabel);
 
-                getApplication().startGame();
-
+                getApplication().getGameClient().start();
             }
         });
         box.getChildren().addAll(

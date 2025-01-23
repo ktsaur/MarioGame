@@ -16,7 +16,7 @@ import java.util.Objects;
 public class Game extends BaseView{
     public static ArrayList<Block> platforms = new ArrayList<>(); //платформы
     public HashMap<KeyCode, Boolean> keys = new HashMap<>(); //коды кнопок
-    public static ArrayList<Monster> monsters = new ArrayList<>();
+    public static ArrayList<Bonus> bonuses = new ArrayList<>();
     private Text scoreText;
     public static int score = 0; // Счет игрока
 
@@ -46,12 +46,9 @@ public class Game extends BaseView{
             String line = LevelData.levels[levelNumber][i];
             for(int j = 0; j < line.length();j++){
                 switch (line.charAt(j)){
-                    case 'M': // символ для монстра
-                        Monster monster = new Monster(j * BLOCK_SIZE, i * BLOCK_SIZE);
-                        monsters.add(monster); // Already added to gameRoot inside the Monster constructor
-                        for (int k = 1; k <= monsters.size(); k++) {
-                            System.out.println(k+1 + " монстр " + monsters.get(k).toString());
-                        }
+                    case 'B': // символ для монстра
+                        Bonus bonus = new Bonus(j * BLOCK_SIZE, i * BLOCK_SIZE);
+                        gameRoot.getChildren().add(bonus);
                         break;
                     case '0':
                         break;
@@ -62,7 +59,7 @@ public class Game extends BaseView{
                         Block brick = new Block(Block.BlockType.BRICK,j*BLOCK_SIZE,i*BLOCK_SIZE);
                         break;
                     case '3':
-                        Block bonus = new Block(Block.BlockType.BONUS,j*BLOCK_SIZE,i*BLOCK_SIZE);
+                        Block blockBonus = new Block(Block.BlockType.BLOCK_BONUS,j*BLOCK_SIZE,i*BLOCK_SIZE);
                         break;
                     case '4':
                         Block stone = new Block(Block.BlockType.STONE,j * BLOCK_SIZE, i * BLOCK_SIZE);
@@ -100,12 +97,14 @@ public class Game extends BaseView{
     }
 
     private void update(){
-        for (int i = 0; i < monsters.size(); i++) {
-            Monster monster = monsters.get(i);
-            System.out.println("создали нового монстра " + monster.toString());
-            if (player.getBoundsInParent().intersects(monster.getBoundsInParent())) {
-                player.handleMonsterCollision(monster, monsters, gameRoot, scoreText);
-                break; // Прерываем, чтобы избежать ошибок из-за изменения списка
+        for (int i = 0; i < bonuses.size(); i++) {
+            Bonus bonus = bonuses.get(i);
+            if (player.getBoundsInParent().intersects(bonus.getBoundsInParent())) {
+                gameRoot.getChildren().remove(bonus); // Удаляем бонус
+                bonuses.remove(bonus);
+                score += 100; // Добавляем очки
+                scoreText.setText("Score: " + score);
+                break;
             }
         }
         if(isPressed(KeyCode.UP) && player.getTranslateY()>=5){
@@ -133,6 +132,7 @@ public class Game extends BaseView{
     }
 
     public void startGameLoop() {
+        System.out.println("Старт игрового цикла...");
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -140,6 +140,7 @@ public class Game extends BaseView{
             }
         };
         timer.start();
+        System.out.println("Игровой таймер запущен.");
     }
 
     @Override

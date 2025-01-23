@@ -13,7 +13,7 @@ public class Block extends Pane {
     ImageView block;
 
     public enum BlockType {
-        PLATFORM, BRICK, BONUS, PIPE_TOP, PIPE_BOTTOM, INVISIBLE_BLOCK, STONE
+        PLATFORM, BRICK, BLOCK_BONUS, PIPE_TOP, PIPE_BOTTOM, INVISIBLE_BLOCK, STONE
     }
 
     public Block(BlockType blockType, int x, int y) {
@@ -27,7 +27,7 @@ public class Block extends Pane {
             case PLATFORM:
                 block.setViewport(new Rectangle2D(0, 0, 16, 16));
                 break;
-            case BONUS:
+            case BLOCK_BONUS:
                 block.setViewport(new Rectangle2D(384, 0, 16, 16));
                 break;
             case BRICK:

@@ -1,7 +1,9 @@
 package ru.kpfu.semester_work2;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
@@ -52,18 +54,16 @@ public class GameApplication extends Application {
         primaryStage.show();
 
         setView(playerConfigView);
-//        game.startGameLoop();
     }
 
     public void setPlayerConfig(PlayerConfig playerConfig) {
         this.playerConfig = playerConfig;
     }
 
-    public void startGame() {
-        client.start();
+   /* public void startGame() {
         game.startGameLoop();
         setView(game);
-    }
+    }*/
 
     public PlayerConfigView getPlayerConfigView() {
         return playerConfigView;
@@ -83,5 +83,15 @@ public class GameApplication extends Application {
 
     public GameClient getGameClient() {
         return client;
+    }
+
+    public void showErrorMessage(String title, String message) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle(title);
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            alert.showAndWait();
+        });
     }
 }

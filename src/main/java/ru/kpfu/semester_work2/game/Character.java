@@ -8,12 +8,10 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
-import ru.kpfu.semester_work2.GameApplication;
 
 import java.util.ArrayList;
 import java.util.Objects;
 
-import static ru.kpfu.semester_work2.GameApplication.appRoot;
 import static ru.kpfu.semester_work2.GameApplication.gameRoot;
 
 public class Character extends Pane {
@@ -42,7 +40,7 @@ public class Character extends Pane {
        boolean movingDown = value > 0;
         for (int i = 0; i < Math.abs(value); i++) {
             for (Node platform: Game.platforms) {
-                if (platform instanceof Monster && !gameRoot.getChildren().contains(platform)) {
+                if (platform instanceof Bonus && !gameRoot.getChildren().contains(platform)) {
                     continue; // Пропускаем, если объект уже удалён
                 }
                 if(this.getBoundsInParent().intersects(platform.getBoundsInParent())) {
@@ -74,7 +72,7 @@ public class Character extends Pane {
         boolean movingRight = value > 0;
         for (int i = 0; i < Math.abs(value); i++) {
             for (Node platform: Game.platforms) {
-                if (platform instanceof Monster && !gameRoot.getChildren().contains(platform)) {
+                if (platform instanceof Bonus && !gameRoot.getChildren().contains(platform)) {
                     continue; // Пропускаем, если объект уже удалён
                 }
                 if(this.getBoundsInParent().intersects(platform.getBoundsInParent())) {
@@ -101,36 +99,20 @@ public class Character extends Pane {
         }
     }
 
-    public void handleMonsterCollision(Monster monster, ArrayList<Monster> monsters, Pane gameRoot, Text scoreText) {
+    public void handleMonsterCollision(Bonus monster, ArrayList<Bonus> monsters, Pane gameRoot, Text scoreText) {
         double playerBottom = this.getTranslateY() + Game.MARIO_SIZE;
         double monsterTop = monster.getTranslateY();
-        double playerLeft = this.getTranslateX();
-        double playerRight = this.getTranslateX() + Game.MARIO_SIZE;
-        double monsterLeft = monster.getTranslateX();
-        double monsterRight = monster.getTranslateX() + Game.BLOCK_SIZE;
 
-        if (playerBottom >= monsterTop && playerVelocity.getY() > 0 &&
-                playerRight > monsterLeft && playerLeft < monsterRight) {
+        if (playerBottom >= monsterTop && playerVelocity.getY() > 0) {
             // Игрок прыгает на монстра
             gameRoot.getChildren().remove(monster);
-            System.out.println("количество монтров до удаления : " + monsters.size());
             monsters.remove(monster);
-            System.out.println("количество монтров после удаления : " + monsters.size());
-            Game.score += 100;
+            Game.score += 100; // Доступ к счету через статическую переменную
             System.out.println("Score: " + Game.score);
 
             // Имитация прыжка вверх от монстра
             this.setTranslateY(this.getTranslateY() - 20);
             this.playerVelocity = new Point2D(0, -10);
-        } else if (playerRight > monsterLeft && playerLeft < monsterRight) {
-            // Игрок касается монстра с боку
-            System.out.println("Game Over!");
-            this.setTranslateX(0);
-            this.setTranslateY(400);
-            gameRoot.setLayoutX(0);
-            Game.score = 0;
         }
     }
-
-
 }

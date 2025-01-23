@@ -36,11 +36,14 @@ public class GameClient {
         String host = application.getPlayerConfig().getHost();
         int port = application.getPlayerConfig().getPort();
 
+        System.out.println("Connecting to " + host + ":" + port);
+
         BufferedReader in;
         BufferedWriter out;
 
         try {
             socket = new Socket(host, port);
+            System.out.println("Подключение к серверу установлено: " + host + ":" + port);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
             out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
 
@@ -48,11 +51,15 @@ public class GameClient {
 
             new Thread(clientThread).start(); // запускаем поток для обработки входящих сообщений
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.err.println("Невозможно подключиться к серверу. Проверьте хост и порт.");
+            Platform.runLater(() -> {
+                application.showErrorMessage("Ошибка подключения",
+                        "Невозможно подключиться к серверу. Проверьте хост и порт.");
+            });
         }
     }
 
-    static class ClientThread implements Runnable {
+    static class ClientThread implements Runnable { //это поток для обработки сообщений
 
         private BufferedReader in;
         private BufferedWriter out;
@@ -69,12 +76,14 @@ public class GameClient {
             try {
                 String message; //message - входящее сообщение
                 while ((message = in.readLine()) != null) {
-                    if (message.equals("READY")) {
-                        System.out.println("Server is ready. Sending confirmation...");
-                        out.write("READY\n");
-                        out.flush();
-                    } else if (message.startsWith("{\"type\":\"START\"")) {
-                        Platform.runLater(() -> client.getApplication().getGame().startGameLoop());
+                    if (message.startsWith("{\"type\":\"START\"")) {
+                        System.out.println("Игра начинается!");
+
+                        Platform.runLater(() -> {
+                            System.out.println("Запуск игрового цикла...");
+                            client.getApplication().getGame().startGameLoop();
+                            client.getApplication().setView(client.getApplication().getGame());
+                        });
                     }
                 }
             } catch (IOException e) {

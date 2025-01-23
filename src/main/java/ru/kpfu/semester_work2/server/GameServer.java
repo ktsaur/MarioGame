@@ -1,5 +1,7 @@
 package ru.kpfu.semester_work2.server;
 
+import org.w3c.dom.ls.LSOutput;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -15,13 +17,11 @@ public class GameServer {
         private GameServer server;
         private BufferedReader in;
         private BufferedWriter out;
-        private String clientName;
 
-        public Client(GameServer server, BufferedReader in, BufferedWriter out, String clientName) {
+        public Client(GameServer server, BufferedReader in, BufferedWriter out) {
             this.server = server;
             this.in = in;
             this.out = out;
-            this.clientName = clientName;
         }
 
         public static void main(String[] args) {
@@ -30,7 +30,7 @@ public class GameServer {
         }
 
         @Override
-        public void run() {
+        public void run() { // метод для обработки входящих сообщений от клиента
             try{
                 while(true) {
                     String message = in.readLine(); //прием сообщений от подключенного клиента (ЭТО НЕ ВВОД ИМЕНИ)
@@ -48,44 +48,27 @@ public class GameServer {
         try {
             serverSocket = new ServerSocket(8080);
             while (clients.size() < 2) {
-                Socket clientSocket = serverSocket.accept();
+
+                Socket clientSocket = serverSocket.accept(); //начинает слушать подключения
+                System.out.println("подключение принято от: " + clientSocket.getInetAddress());
+
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
 
-                String playerName = in.readLine();  // Здесь читаем имя игрока
-                Client client = new Client(this, in, out, playerName);
+                Client client = new Client(this, in, out);
                 clients.add(client);
+                System.out.println("Клиент добавлен. Всего клиентов: " + clients.size());
+
                 new Thread(client).start();
-                System.out.println("Player connected: " + playerName);
             }
-            startGame();
+
+            if (clients.size() == 2) {
+                System.out.println("Два клиента подключены. Начинаем игру...");
+                for (Client client : clients) { sendMessage("{\"type\":\"START\"}", client); }
+                //мы отправили сообщения клиентам о том что игра началась
+            }
         }catch (IOException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    public synchronized void startGame() throws IOException {
-        if (clients.size() == 2 && !gameStarted) {
-            gameStarted = true;
-            for (Client client : clients) {
-                client.out.write("READY\n");
-                client.out.flush();
-            }
-
-            //оэидаем подтверждение от обоих игроков
-            for (Client client : clients) {
-                String response = client.in.readLine();
-                if (!"READY".equals(response)) {
-                    gameStarted = false;
-                    return;
-                }
-            }
-
-            for (int i = 0; i < clients.size(); i++) {
-                Client client = clients.get(i);
-                sendMessage("{\"type\":\"START\", \"player\":\"Player" + (i + 1) + "\"}", client);
-            }
-            System.out.println("Game started for both players.");
         }
     }
 
@@ -98,9 +81,11 @@ public class GameServer {
                 c.out.write(message + "\n");
                 c.out.newLine();
                 c.out.flush();
+                System.out.println("Сообщение отправлено клиенту: " + message);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
+        gameStarted = true;
     }
 }
