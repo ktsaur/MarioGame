@@ -3,7 +3,6 @@ package ru.kpfu.semester_work2.client;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import ru.kpfu.semester_work2.GameApplication;
-import ru.kpfu.semester_work2.game.Game;
 
 import java.io.*;
 import java.net.Socket;
@@ -37,11 +36,8 @@ public class GameClient {
         String host = application.getPlayerConfig().getHost();
         int port = application.getPlayerConfig().getPort();
 
-        System.out.println("Connecting to " + host + ":" + port);
-
         BufferedReader in;
         BufferedWriter out;
-
         try {
             socket = new Socket(host, port);
             System.out.println("Подключение к серверу установлено: " + host + ":" + port);
@@ -62,11 +58,15 @@ public class GameClient {
     }
 
     public void createRoom() {
-        sendMessage("create_room");
+        sendMessage("CREATE_ROOM");
     }
 
     public void joinRoom(String roomId) {
-        sendMessage("join_room " + roomId);
+        sendMessage("JOIN_ROOM " + roomId);
+    }
+
+    public void updatePlayerInfo(String playerName, int score, long time) {
+        sendMessage("UPDATE_INFO " + playerName + " " + score + " " + time);
     }
 
     static class ClientThread implements Runnable { //это поток для обработки сообщений
@@ -86,19 +86,26 @@ public class GameClient {
                 String message;
                 while ((message = in.readLine()) != null) {
                     if (message.startsWith("{\"type\":\"ROOM_CREATED\"")) {
-                        System.out.println("Комната создана: " + message);
-                        client.application.showMessage("Room created.", "RoomID: " + message, Alert.AlertType.INFORMATION);
+                        String[] parts = message.split("\"roomId\":\"");
+                        String roomId = parts[1].split("\"")[0];
+                        client.application.showMessage("Room created.", "RoomID: " + roomId, Alert.AlertType.INFORMATION);
                     } else if (message.startsWith("{\"type\":\"JOINED\"")) {
-                        System.out.println("Присоединился к комнате: " + message);
                         client.application.showNotification("Joined the room");
                     } else if (message.startsWith("{\"type\":\"ERROR\"")) {
-                        System.out.println("Ошибка: " + message);
-                        client.application.showNotification(message);
+                        client.application.showNotification("Room is full or doesn't exist");
                     } else if (message.startsWith("{\"type\":\"START\"")) {
                         Platform.runLater(() -> {
-                            System.out.println("Запуск игрового цикла...");
                             client.getApplication().getGame().startGameLoop();
+                            client.getApplication().startGameTimer();
                             client.getApplication().setView(client.getApplication().getGame());
+                        });
+                    } else if (message.startsWith("{\"type\":\"UPDATE_INFO\"")) {
+                        String[] parts = message.split(",");
+                        String opponentName = parts[1].split(":")[1].replace("\"", "");
+                        int opponentScore = Integer.parseInt(parts[2].split(":")[1]);
+                        long opponentTime = (long) Double.parseDouble(parts[3].split(":")[1].replace("}", ""));
+                        Platform.runLater(() -> {
+                            client.getApplication().getGame().updateOpponentInfo(opponentName, opponentScore, opponentTime);
                         });
                     }
                 }

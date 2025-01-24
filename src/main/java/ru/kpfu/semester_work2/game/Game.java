@@ -1,12 +1,14 @@
 package ru.kpfu.semester_work2.game;
 
 import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
 import javafx.scene.Parent;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
-import javafx.scene.text.Text;
+import ru.kpfu.semester_work2.GameApplication;
 import ru.kpfu.semester_work2.View.BaseView;
 
 import java.util.ArrayList;
@@ -17,7 +19,6 @@ public class Game extends BaseView{
     public static ArrayList<Block> platforms = new ArrayList<>(); //платформы
     public HashMap<KeyCode, Boolean> keys = new HashMap<>(); //коды кнопок
     public static ArrayList<Bonus> bonuses = new ArrayList<>();
-    private Text scoreText;
     public static int score = 0; // Счет игрока
 
     Image backgroundImg = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/ru/kpfu/semester_work2/background.png")));
@@ -30,10 +31,15 @@ public class Game extends BaseView{
     public Character player;
     int levelNumber = 0;
     private int levelWidth;
+    private Label opponentInfo;
 
     public Game(Pane appRoot, Pane gameRoot) {
         this.appRoot = appRoot;
         this.gameRoot = gameRoot;
+    }
+
+    public static int getScore() {
+        return score;
     }
 
     public void initContent(){
@@ -46,7 +52,7 @@ public class Game extends BaseView{
             String line = LevelData.levels[levelNumber][i];
             for(int j = 0; j < line.length();j++){
                 switch (line.charAt(j)){
-                    case 'B': // символ для монстра
+                    case 'B': // символ для бонуса
                         Bonus bonus = new Bonus(j * BLOCK_SIZE, i * BLOCK_SIZE);
                         gameRoot.getChildren().add(bonus);
                         break;
@@ -90,10 +96,12 @@ public class Game extends BaseView{
         gameRoot.getChildren().add(player);
         appRoot.getChildren().addAll(backgroundIV,gameRoot);
 
-        scoreText = new Text("Score: 0");
-        scoreText.setTranslateX(10); // Расположение по X
-        scoreText.setTranslateY(20); // Расположение по Y
-        appRoot.getChildren().add(scoreText);
+        opponentInfo = new Label();
+        opponentInfo.setStyle("-fx-background-color: rgba(255, 255, 255, 0.8); -fx-padding: 10; -fx-font-size: 14;");
+        opponentInfo.setLayoutX(900);
+        opponentInfo.setLayoutY(10);
+
+        Platform.runLater(() -> GameApplication.appRoot.getChildren().add(opponentInfo));
     }
 
     private void update(){
@@ -103,7 +111,6 @@ public class Game extends BaseView{
                 gameRoot.getChildren().remove(bonus); // Удаляем бонус
                 bonuses.remove(bonus);
                 score += 100; // Добавляем очки
-                scoreText.setText("Score: " + score);
                 break;
             }
         }
@@ -124,7 +131,6 @@ public class Game extends BaseView{
             player.playerVelocity = player.playerVelocity.add(0,1);
         }
         player.moveY((int)player.playerVelocity.getY());
-        scoreText.setText("Score: " + score);
     }
 
     private boolean isPressed(KeyCode key){
@@ -141,6 +147,10 @@ public class Game extends BaseView{
         };
         timer.start();
         System.out.println("Игровой таймер запущен.");
+    }
+
+    public void updateOpponentInfo(String name, int score, long time) {
+        Platform.runLater(() -> opponentInfo.setText(String.format("Opponent: %s\nScore: %d\nTime: %d sec", name, score, time)));
     }
 
     @Override

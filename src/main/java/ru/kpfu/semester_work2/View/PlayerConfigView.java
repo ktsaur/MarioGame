@@ -20,12 +20,9 @@ import java.util.Objects;
 public class PlayerConfigView extends BaseView{
 
     private AnchorPane pane;
-    private VBox mainBox;
-    private VBox box;
     private TextField username;
     private TextField host;
     private TextField port;
-    private Button start;
 
     @Override
     public Parent getView() {

@@ -53,6 +53,9 @@ public class GameServer {
         private BufferedReader in;
         private BufferedWriter out;
         private GameRoom room;
+        private String playerName;
+        private int score;
+        private double time;
 
         public Client(GameServer server, BufferedReader in, BufferedWriter out) {
             this.server = server;
@@ -64,15 +67,15 @@ public class GameServer {
         public void run() { // метод для обработки входящих сообщений от клиента
             try{
                 String message;
-                while((message= in.readLine()) != null) {//прием сообщений от подключенного клиента (ЭТО НЕ ВВОД ИМЕНИ)
-                    if (message.startsWith("create_room")) {
-                        String roomId = UUID.randomUUID().toString();
+                while((message= in.readLine()) != null) {
+                    if (message.startsWith("CREATE_ROOM")) {
+                        String roomId = Integer.toString((int)(Math.random() * 9000) + 1000);
                         GameRoom room = new GameRoom(roomId);
                         server.rooms.put(roomId, room);
                         room.addClient(this);
                         this.room = room;
                         sendMessage("{\"type\":\"ROOM_CREATED\", \"roomId\":\"" + roomId + "\"}");
-                    } else if (message.startsWith("join_room")) {
+                    } else if (message.startsWith("JOIN_ROOM")) {
                         String roomId = message.split(" ")[1];
                         GameRoom room = server.rooms.get(roomId);
                         if (room != null && !room.isFull()) {
@@ -87,6 +90,23 @@ public class GameServer {
                             }
                         } else {
                             sendMessage("{\"type\":\"ERROR\", \"message\":\"Room is full or doesn't exist\"}");
+                        }
+                    } else if (message.startsWith("UPDATE_INFO")) {
+                        String[] parts = message.split(" ", 4);
+                        this.playerName = parts[1];
+                        this.score = Integer.parseInt(parts[2]);
+//                        this.time = (long) Double.parseDouble(parts[3].split(":")[1].replace("}", ""));
+                        this.time = (long) Double.parseDouble(parts[3]);
+
+                        if (room != null) {
+                            for (Client client : room.getClients()) {
+                                if (client != this) {
+                                    client.sendMessage("{\"type\":\"UPDATE_INFO\",\"playerName\":\"" + playerName +
+                                            "\",\"score\":" + score + ",\"time\":" + time + "}");
+                                    System.out.println("{\"type\":\"UPDATE_INFO\",\"playerName\":\"" + playerName  +
+                                            "\",\"score\":" + score + ",\"time\":" + time + "}");
+                                }
+                            }
                         }
                     }
                 }

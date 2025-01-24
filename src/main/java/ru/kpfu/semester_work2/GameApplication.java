@@ -25,6 +25,9 @@ public class GameApplication extends Application {
     private PlayerConfigView playerConfigView;
     private Game game;
     private BorderPane root;
+    private Label playerInfo;
+    private long startTime;
+    private boolean gameStarted = false;
 
     public static Pane appRoot = new Pane();
     public static Pane gameRoot = new Pane();
@@ -62,6 +65,11 @@ public class GameApplication extends Application {
 
     public void setPlayerConfig(PlayerConfig playerConfig) {
         this.playerConfig = playerConfig;
+        System.out.println(playerConfig != null);
+        System.out.println("name is = " + playerConfig.getPlayerName());
+        if (playerConfig != null && playerConfig.getPlayerName() != null) {
+            addPlayerInfoCard(playerConfig.getPlayerName());
+        }
     }
 
     public PlayerConfigView getPlayerConfigView() {
@@ -121,4 +129,37 @@ public class GameApplication extends Application {
             delay.play();
         });
     }
+
+    public void addPlayerInfoCard(String playerName) {
+        playerInfo = new Label();
+        playerInfo.setStyle("-fx-background-color: rgba(255, 255, 255, 0.8); -fx-padding: 10; -fx-font-size: 14;");
+        playerInfo.setLayoutX(10);
+        playerInfo.setLayoutY(10);
+
+        Platform.runLater(() -> appRoot.getChildren().add(playerInfo));
+
+        new Thread(() -> {
+            while (true) {
+                if (gameStarted) {
+                    long elapsedTime = (System.currentTimeMillis() - startTime) / 1000;
+                    int currentScore = Game.getScore();
+                    Platform.runLater(() -> {
+                        playerInfo.setText(String.format("Player: %s\nScore: %d\nTime: %d sec", playerName, currentScore, elapsedTime));
+                    });
+                    client.updatePlayerInfo(playerName, currentScore, elapsedTime);
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    public void startGameTimer() {
+        startTime = System.currentTimeMillis();
+        gameStarted = true;
+    }
+
 }
