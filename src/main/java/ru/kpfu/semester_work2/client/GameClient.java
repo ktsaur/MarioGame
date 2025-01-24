@@ -1,8 +1,9 @@
 package ru.kpfu.semester_work2.client;
 
 import javafx.application.Platform;
-import javafx.stage.Stage;
+import javafx.scene.control.Alert;
 import ru.kpfu.semester_work2.GameApplication;
+import ru.kpfu.semester_work2.game.Game;
 
 import java.io.*;
 import java.net.Socket;
@@ -50,17 +51,25 @@ public class GameClient {
             clientThread = new ClientThread(in, out, this);
 
             new Thread(clientThread).start(); // запускаем поток для обработки входящих сообщений
+            application.showNotification("Connection to the server was successful");
         } catch (IOException e) {
             System.err.println("Невозможно подключиться к серверу. Проверьте хост и порт.");
             Platform.runLater(() -> {
-                application.showErrorMessage("Ошибка подключения",
-                        "Невозможно подключиться к серверу. Проверьте хост и порт.");
+                application.showMessage("Ошибка подключения",
+                        "Невозможно подключиться к серверу. Проверьте хост и порт.", Alert.AlertType.ERROR);
             });
         }
     }
 
-    static class ClientThread implements Runnable { //это поток для обработки сообщений
+    public void createRoom() {
+        sendMessage("create_room");
+    }
 
+    public void joinRoom(String roomId) {
+        sendMessage("join_room " + roomId);
+    }
+
+    static class ClientThread implements Runnable { //это поток для обработки сообщений
         private BufferedReader in;
         private BufferedWriter out;
         private GameClient client;
@@ -74,11 +83,18 @@ public class GameClient {
         @Override
         public void run() { //должен быть метод для обработки входящих сообщений от сервера
             try {
-                String message; //message - входящее сообщение
+                String message;
                 while ((message = in.readLine()) != null) {
-                    if (message.startsWith("{\"type\":\"START\"")) {
-                        System.out.println("Игра начинается!");
-
+                    if (message.startsWith("{\"type\":\"ROOM_CREATED\"")) {
+                        System.out.println("Комната создана: " + message);
+                        client.application.showMessage("Room created.", "RoomID: " + message, Alert.AlertType.INFORMATION);
+                    } else if (message.startsWith("{\"type\":\"JOINED\"")) {
+                        System.out.println("Присоединился к комнате: " + message);
+                        client.application.showNotification("Joined the room");
+                    } else if (message.startsWith("{\"type\":\"ERROR\"")) {
+                        System.out.println("Ошибка: " + message);
+                        client.application.showNotification(message);
+                    } else if (message.startsWith("{\"type\":\"START\"")) {
                         Platform.runLater(() -> {
                             System.out.println("Запуск игрового цикла...");
                             client.getApplication().getGame().startGameLoop();
