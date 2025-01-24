@@ -1,6 +1,5 @@
 package ru.kpfu.semester_work2.View;
 
-import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;

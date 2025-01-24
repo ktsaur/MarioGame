@@ -65,8 +65,8 @@ public class GameClient {
         sendMessage("JOIN_ROOM " + roomId);
     }
 
-    public void updatePlayerInfo(String playerName, int score, long time) {
-        sendMessage("UPDATE_INFO " + playerName + " " + score + " " + time);
+    public void updatePlayerInfo(String playerName, int score, long time,  int playerX) {
+        sendMessage("UPDATE_INFO " + playerName + " " + score + " " + time  + " " + playerX);
     }
 
     static class ClientThread implements Runnable { //это поток для обработки сообщений
@@ -100,12 +100,24 @@ public class GameClient {
                             client.getApplication().setView(client.getApplication().getGame());
                         });
                     } else if (message.startsWith("{\"type\":\"UPDATE_INFO\"")) {
-                        String[] parts = message.split(",");
+                        System.out.println(message);
+                        System.out.println("сообщение из гейм клиент");
+                        String[] parts = message.split(",", 5);
                         String opponentName = parts[1].split(":")[1].replace("\"", "");
                         int opponentScore = Integer.parseInt(parts[2].split(":")[1]);
-                        long opponentTime = (long) Double.parseDouble(parts[3].split(":")[1].replace("}", ""));
+                        long opponentTime = (long) Double.parseDouble(parts[3].split(":")[1]);
+                        int playerX = Integer.parseInt(parts[4].split(":")[1].replace("}", ""));
+                        System.out.println(opponentTime + "opponent time");
+
                         Platform.runLater(() -> {
-                            client.getApplication().getGame().updateOpponentInfo(opponentName, opponentScore, opponentTime);
+                            System.out.println("тут сетю текст на лейбл опонента");
+                            client.getApplication().getGame().updateOpponentInfo(opponentName, opponentScore, opponentTime, playerX);
+                        });
+                    } else if (message.startsWith("{\"type\":\"GAME_OVER\"")) {
+                        String winner = message.split("\"winner\":\"")[1].split("\"")[0];
+                        Platform.runLater(() -> {
+                            client.application.showMessage("Game Over", "Winner: " + winner, Alert.AlertType.INFORMATION);
+                            client.application.setView(client.application.getPlayerConfigView());
                         });
                     }
                 }

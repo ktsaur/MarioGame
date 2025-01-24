@@ -149,8 +149,11 @@ public class Game extends BaseView{
         System.out.println("Игровой таймер запущен.");
     }
 
-    public void updateOpponentInfo(String name, int score, long time) {
-        Platform.runLater(() -> opponentInfo.setText(String.format("Opponent: %s\nScore: %d\nTime: %d sec", name, score, time)));
+    public void updateOpponentInfo(String name, int score, long time, int playerX) {
+        Platform.runLater(() ->
+                opponentInfo.setText(String.format("Opponent: %s\nScore: %d\nTime: %d sec\nPlayerX: %d",
+                        name, score, time, playerX))
+        );
     }
 
     @Override

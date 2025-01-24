@@ -17,6 +17,7 @@ public class GameServer {
     static class GameRoom {
         private String roomId;
         private List<Client> clients = new ArrayList<>();
+        private boolean gameEnded = false;
 
         public GameRoom(String roomId) {
             this.roomId = roomId;
@@ -46,6 +47,25 @@ public class GameServer {
             }
         }
 
+        public boolean checkGameEnd() {
+            for (Client client : clients) {
+                if (client.hasReachedEndOfLevel()) {
+                    gameEnded = true;
+                    for (Client c : clients) {
+                        c.sendMessage("{\"type\":\"GAME_OVER\",\"winner\":\"" + client.getPlayerName() + "\"}");
+                        System.out.println("ЕСТЬ ПОБЕДИТЕЛЬ УРА");
+                    }
+                    System.out.println("Игра завершена! Победитель: " + client.getPlayerName());
+                    break;
+                }
+            }
+            return gameEnded;
+        }
+
+        public boolean isGameEnded() {
+            return gameEnded;
+        }
+
     }
 
     static class Client implements Runnable {
@@ -56,11 +76,29 @@ public class GameServer {
         private String playerName;
         private int score;
         private double time;
+        private int playerX;  // Координата X игрока
+        private static final int LEVEL_END_X = 9474; // Примерное значение конца уровня
 
         public Client(GameServer server, BufferedReader in, BufferedWriter out) {
             this.server = server;
             this.in = in;
             this.out = out;
+        }
+
+        public int getScore() {
+            return score;
+        }
+
+        public String getPlayerName() {
+            return playerName;
+        }
+
+        public void updatePlayerPosition(int x) {
+            this.playerX = x;
+        }
+
+        public boolean hasReachedEndOfLevel() {
+            return playerX >= LEVEL_END_X;
         }
 
         @Override
@@ -92,19 +130,21 @@ public class GameServer {
                             sendMessage("{\"type\":\"ERROR\", \"message\":\"Room is full or doesn't exist\"}");
                         }
                     } else if (message.startsWith("UPDATE_INFO")) {
-                        String[] parts = message.split(" ", 4);
+                        System.out.println(message);
+                        String[] parts = message.split(" ", 5);
                         this.playerName = parts[1];
                         this.score = Integer.parseInt(parts[2]);
-//                        this.time = (long) Double.parseDouble(parts[3].split(":")[1].replace("}", ""));
                         this.time = (long) Double.parseDouble(parts[3]);
+                        this.playerX = Integer.parseInt(parts[4]);
 
                         if (room != null) {
+                            if (room.checkGameEnd()) break;
                             for (Client client : room.getClients()) {
                                 if (client != this) {
                                     client.sendMessage("{\"type\":\"UPDATE_INFO\",\"playerName\":\"" + playerName +
-                                            "\",\"score\":" + score + ",\"time\":" + time + "}");
+                                            "\",\"score\":" + score + ",\"time\":" + time + ",\"x\":" + playerX + "}");
                                     System.out.println("{\"type\":\"UPDATE_INFO\",\"playerName\":\"" + playerName  +
-                                            "\",\"score\":" + score + ",\"time\":" + time + "}");
+                                            "\",\"score\":" + score + ",\"time\":" + time + ",\"x\":" + playerX + "}");
                                 }
                             }
                         }

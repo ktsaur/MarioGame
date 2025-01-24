@@ -144,9 +144,10 @@ public class GameApplication extends Application {
                     long elapsedTime = (System.currentTimeMillis() - startTime) / 1000;
                     int currentScore = Game.getScore();
                     Platform.runLater(() -> {
-                        playerInfo.setText(String.format("Player: %s\nScore: %d\nTime: %d sec", playerName, currentScore, elapsedTime));
+                        playerInfo.setText(String.format("Player: %s\nScore: %d\nTime: %d sec \n playerX: %d", playerName, currentScore, elapsedTime, (int) game.player.getTranslateX()));
                     });
-                    client.updatePlayerInfo(playerName, currentScore, elapsedTime);
+                    client.updatePlayerInfo(playerName, currentScore, elapsedTime, (int) game.player.getTranslateX());
+                    System.out.println("отправили сообщение клиенту");
                 }
                 try {
                     Thread.sleep(1000);
