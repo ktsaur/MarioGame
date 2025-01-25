@@ -111,7 +111,7 @@ public class GameClient {
 
                         Platform.runLater(() -> {
                             System.out.println("тут сетю текст на лейбл опонента");
-                            client.getApplication().getGame().updateOpponentInfo(opponentName, opponentScore, opponentTime, playerX);
+                            client.getApplication().getGame().updateOpponentInfo(opponentName, opponentScore, opponentTime);
                         });
                     } else if (message.startsWith("{\"type\":\"GAME_OVER\"")) {
                         String winner = message.split("\"winner\":\"")[1].split("\"")[0];

@@ -122,11 +122,13 @@ public class GameServer {
                 while((message= in.readLine()) != null) {
                     if (message.startsWith("CREATE_ROOM")) {
                         String roomId = Integer.toString((int)(Math.random() * 9000) + 1000);
+                        System.out.println(roomId);
                         GameRoom room = new GameRoom(roomId);
                         server.rooms.put(roomId, room);
                         room.addClient(this);
                         this.room = room;
                         sendMessage("{\"type\":\"ROOM_CREATED\", \"roomId\":\"" + roomId + "\"}");
+                        System.out.println(message);
                     } else if (message.startsWith("JOIN_ROOM")) {
                         String roomId = message.split(" ")[1];
                         GameRoom room = server.rooms.get(roomId);

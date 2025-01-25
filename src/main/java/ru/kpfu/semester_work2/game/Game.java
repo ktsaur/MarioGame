@@ -98,7 +98,7 @@ public class Game extends BaseView{
 
         opponentInfo = new Label();
         opponentInfo.setStyle("-fx-background-color: rgba(255, 255, 255, 0.8); -fx-padding: 10; -fx-font-size: 14;");
-        opponentInfo.setLayoutX(900);
+        opponentInfo.setLayoutX(1070);
         opponentInfo.setLayoutY(10);
 
         Platform.runLater(() -> GameApplication.appRoot.getChildren().add(opponentInfo));
@@ -149,10 +149,10 @@ public class Game extends BaseView{
         System.out.println("Игровой таймер запущен.");
     }
 
-    public void updateOpponentInfo(String name, int score, long time, int playerX) {
+    public void updateOpponentInfo(String name, int score, long time) {
         Platform.runLater(() ->
-                opponentInfo.setText(String.format("Opponent: %s\nScore: %d\nTime: %d sec\nPlayerX: %d",
-                        name, score, time, playerX))
+                opponentInfo.setText(String.format("Opponent: %s\nScore: %d\nTime: %d sec",
+                        name, score, time))
         );
     }
 
