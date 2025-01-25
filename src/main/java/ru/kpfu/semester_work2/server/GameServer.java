@@ -48,16 +48,24 @@ public class GameServer {
         }
 
         public boolean checkGameEnd() {
-            for (Client client : clients) {
-                if (client.hasReachedEndOfLevel()) {
-                    gameEnded = true;
-                    for (Client c : clients) {
-                        c.sendMessage("{\"type\":\"GAME_OVER\",\"winner\":\"" + client.getPlayerName() + "\"}");
-                        System.out.println("ЕСТЬ ПОБЕДИТЕЛЬ УРА");
+            boolean allPlayersFinished = clients.stream().allMatch(Client::hasReachedEndOfLevel);
+            if (allPlayersFinished) {
+                Client winner = null;
+                double minTime = Double.MAX_VALUE;
+
+                for (Client client : clients) {
+                    double adjustedTime = client.getAdjustedTime();
+                    if (adjustedTime < minTime) {
+                        minTime = adjustedTime;
+                        winner = client;
                     }
-                    System.out.println("Игра завершена! Победитель: " + client.getPlayerName());
-                    break;
                 }
+
+                gameEnded = true;
+                for (Client client : clients) {
+                    client.sendMessage("{\"type\":\"GAME_OVER\",\"winner\":\"" + winner.getPlayerName() + "\",\"time\":" + minTime + "}");
+                }
+                System.out.println("Игра завершена! Победитель: " + winner.getPlayerName());
             }
             return gameEnded;
         }
@@ -99,6 +107,12 @@ public class GameServer {
 
         public boolean hasReachedEndOfLevel() {
             return playerX >= LEVEL_END_X;
+        }
+
+        public double getAdjustedTime() {
+            // За каждые 100 очков вычитается 3 секунды
+            int bonusTimeReduction = (score / 100) * 3;
+            return time - bonusTimeReduction;
         }
 
         @Override
